@@ -1,0 +1,614 @@
+# pages/00_Ausfuellhinweise.py
+"""Streamlit page with guidance for completing the maturity assessment."""
+
+from __future__ import annotations
+
+import streamlit as st
+from core.state import init_session_state
+from core.i18n import get_language, t
+
+TU_GREEN = "#639A00"
+TU_ORANGE = "#CA7406"
+TD_BLUE = "#2F3DB8"
+OG_ORANGE = "#F28C28"
+
+
+def main() -> None:
+    """Render guidance sections for completing and interpreting the assessment."""
+    init_session_state()
+    en = get_language() == "en"
+
+    # Darkmode robust (wie in 00_Einfuehrung.py)
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
+
+    border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
+    soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
+    header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
+    zebra_bg = "rgba(255,255,255,0.04)" if dark else "rgba(0,0,0,0.018)"
+    hover_bg = "rgba(255,255,255,0.07)" if dark else "rgba(0,0,0,0.035)"
+    shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
+
+    # Secondary-Button Grundzustand (Zurück)
+    btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
+    btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
+
+    st.markdown(
+        f"""
+<style>
+  .rgm-page {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 6px;
+  }}
+
+  .rgm-h1 {{
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 0 0 6px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-lead {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+    margin: 0;
+  }}
+
+  .rgm-muted {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+  }}
+
+  .rgm-hero {{
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
+    border-radius: 14px;
+    padding: 18px 18px 14px 18px;
+    box-shadow: {shadow};
+  }}
+
+  .rgm-accent-line {{
+    height: 3px;
+    width: 96px;
+    border-radius: 999px;
+    margin: 10px 0 14px 0;
+    background: linear-gradient(90deg, {TD_BLUE}, {OG_ORANGE});
+  }}
+
+  /* Schnellnavigation */
+  .rgm-chips {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }}
+  .rgm-chip {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid {border};
+    background: {soft_bg};
+    color: var(--rgm-text, #111);
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: none;
+  }}
+  .rgm-chip:hover {{
+    background: {hover_bg};
+  }}
+
+  .rgm-card {{
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: {shadow};
+    margin-top: 16px;
+  }}
+
+  .rgm-card-title {{
+    font-weight: 850;
+    font-size: 15px;
+    margin: 0 0 10px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-text {{
+    margin: 10px 0 0 0;
+  }}
+
+  .rgm-table-wrap {{
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }}
+
+  .rgm-table {{
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 760px;
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
+    border-radius: 12px;
+    overflow: hidden;
+  }}
+
+  /* Sticky Header */
+  .rgm-table thead th {{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    text-align: left;
+    padding: 10px 10px;
+    font-weight: 850;
+    font-size: 13px;
+    color: var(--rgm-text, #111);
+    background: {header_bg};
+    border-bottom: 1px solid {border};
+    vertical-align: top;
+    white-space: nowrap;
+  }}
+
+  .rgm-table tbody td {{
+    padding: 10px 10px;
+    font-size: 13px;
+    color: var(--rgm-text, #111);
+    border-bottom: 1px solid {border};
+    vertical-align: top;
+    background: transparent;
+  }}
+
+  /* Zebra + Hover */
+  .rgm-table tbody tr:nth-child(even) td {{
+    background: {zebra_bg};
+  }}
+  .rgm-table tbody tr:hover td {{
+    background: {hover_bg};
+  }}
+
+  .rgm-table tr:last-child td {{
+    border-bottom: none;
+  }}
+
+  .rgm-strong {{
+    font-weight: 850;
+  }}
+
+  .rgm-warning {{
+    margin-top: 14px;
+    padding: 14px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(242, 140, 40, 0.60);
+    background: rgba(242, 140, 40, 0.10);
+    box-shadow: {shadow};
+  }}
+
+  .rgm-warning-title {{
+    font-weight: 900;
+    font-size: 14px;
+    color: #c0392b;
+    margin: 0 0 6px 0;
+  }}
+
+  .rgm-warning ul {{
+    margin: 0;
+    padding-left: 18px;
+    color: var(--rgm-text, #111);
+    font-size: 13px;
+    line-height: 1.65;
+  }}
+
+  .rgm-warning li {{
+    margin: 0;
+  }}
+
+  /* =========================================
+     NAV-BUTTONS: Secondary NUR im Nav-Bereich
+     ========================================= */
+  .rgm-nav button[data-testid="baseButton-secondary"],
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+    background: {btn2_bg} !important;
+    color: {btn2_text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    opacity: 1 !important;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"] *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
+    color: inherit !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
+    background: {TU_ORANGE} !important;
+    border-color: {TU_ORANGE} !important;
+    color: #ffffff !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
+    color: #ffffff !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:focus,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
+  }}
+
+  @media (max-width: 900px) {{
+    .rgm-h1 {{ font-size: 26px; }}
+    .rgm-hero {{ padding: 16px; }}
+    .rgm-card {{ padding: 12px 12px; }}
+  }}
+</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
+
+    hero_html = """
+<div class="rgm-hero">
+  <div class="rgm-h1">Instructions for Using the Maturity Model</div>
+  <div class="rgm-accent-line"></div>
+
+  <p class="rgm-lead">
+    The maturity model enables a quick and consistent assessment of maturity levels in technical documentation.
+    For this purpose, specific questions are answered for each subdimension. The maturity model is aligned with the
+    maturity levels of Capability Maturity Model Integration (CMMI).
+  </p>
+
+  <div class="rgm-chips">
+    <a class="rgm-chip" href="#rgm_reifegrad">Maturity levels</a>
+    <a class="rgm-chip" href="#rgm_keywords">Keywords</a>
+    <a class="rgm-chip" href="#rgm_answers">Answer options</a>
+  </div>
+</div>
+        """ if en else """
+<div class="rgm-hero">
+  <div class="rgm-h1">Ausfüllhinweise zum Reifegradmodell</div>
+  <div class="rgm-accent-line"></div>
+
+  <p class="rgm-lead">
+    Anhand des Reifegradmodells ist eine rasche und einheitliche Bestimmung von Reifegraden der technischen Dokumentation möglich.
+    Hierzu werden je Subdimension spezifische Fragestellungen beantwortet. Das Reifegradmodell orientiert sich an den Reifegradstufen
+    der Capability Maturity Model Integration (CMMI).
+  </p>
+
+  <div class="rgm-chips">
+    <a class="rgm-chip" href="#rgm_reifegrad">Reifegradstufen</a>
+    <a class="rgm-chip" href="#rgm_keywords">Schlüsselwörter</a>
+    <a class="rgm-chip" href="#rgm_answers">Antwortmöglichkeiten</a>
+  </div>
+</div>
+        """
+    st.markdown(hero_html, unsafe_allow_html=True)
+
+    # Anchor: Reifegradstufen
+    st.markdown('<div id="rgm_reifegrad"></div>', unsafe_allow_html=True)
+    maturity_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Maturity Levels</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 180px;">Maturity level</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">1 - initial</td>
+          <td>Processes are unpredictable and reactive. Success at this level depends mainly on individual effort rather than established organizational processes.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">2 - managed</td>
+          <td>Organizations at this level establish basic project management practices. Projects follow basic planning and control mechanisms, resulting in more predictable outcomes.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">3 - defined</td>
+          <td>This level marks a clear shift toward organization-wide process standardization. Units and projects follow consistent approaches, reducing variability in execution.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">4 - quantitatively managed</td>
+          <td>Organizations achieve precise process control. Processes are managed measurably, for example using indicators for process and product quality.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">5 - optimized</td>
+          <td>Organizations systematically and continuously improve their processes, especially through incremental and innovative changes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Keywords are used to distinguish the content of the maturity levels. They are explained below.
+  </div>
+</div>
+        """ if en else """
+<div class="rgm-card">
+  <div class="rgm-card-title">Beschreibung der Reifegradstufen</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 180px;">Reifegradstufe</th>
+          <th>Beschreibung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">1 - initial</td>
+          <td>Prozesse laufen unvorhersehbar und reaktiv. Der Erfolg auf dieser Ebene hängt hauptsächlich von den individuellen Anstrengungen und nicht von etablierten organisatorischen Prozessen ab.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">2 - gemanagt</td>
+          <td>Organisationen auf dieser Ebene etablieren grundlegende Projektmanagementpraktiken. Projekte folgen grundlegenden Planungs- und Kontrollmechanismen und führen so zu vorhersehbaren Ergebnissen.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">3 - definiert</td>
+          <td>Diese Ebene markiert einen deutlichen Wandel hin zu einer unternehmensweiten Prozessstandardisierung. Einheiten/Projekte folgen einheitlichen Vorgehensweisen, wodurch die Variabilität der Ausführung sinkt.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">4 - quantitativ gemanagt</td>
+          <td>Organisationen erreichen eine präzise Prozesskontrolle. Prozesse werden messbar gesteuert, u. a. über Kennzahlen zur Prozess- und Produktqualität.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">5 - optimiert</td>
+          <td>Organisationen verbessern ihre Prozesse systematisch und kontinuierlich – insbesondere durch inkrementelle und innovative Änderungen.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Um eine inhaltliche Abgrenzung zwischen den jeweiligen Reifegradstufen zu ermöglichen, werden Schlüsselwörter verwendet.
+    Diese werden nachfolgend erläutert.
+  </div>
+</div>
+        """
+    st.markdown(maturity_html, unsafe_allow_html=True)
+
+    # Anchor: Schlüsselwörter
+    st.markdown('<div id="rgm_keywords"></div>', unsafe_allow_html=True)
+    keywords_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Keywords</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Keyword</th>
+          <th>Interpretation / meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Situational / ad hoc</td>
+          <td>The process is carried out as needed, for example when triggered externally.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Occasionally</td>
+          <td>The process is repeated, but without a fixed interval.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regularly</td>
+          <td>The process is carried out at a fixed interval.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regularly reviewed</td>
+          <td>Compliance with the fixed intervals is controlled using key figures.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Continuously improved</td>
+          <td>The process is continuously improved by the employees carrying it out.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Specific questions are defined to identify maturity levels. The answer options reflect the degree of implementation
+    of the respective assessment criterion. Based on the consolidation of the answers, the maturity level of the process
+    area under review is identified. The methodological basis for identifying maturity levels is the ISO/IEC 330xx series.
+  </div>
+</div>
+        """ if en else """
+<div class="rgm-card">
+  <div class="rgm-card-title">Beschreibung der Schlüsselwörter</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Schlüsselwort</th>
+          <th>Interpretation / Bedeutung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Situativ / Ad-Hoc</td>
+          <td>Der Prozess wird anlassbezogen durchgeführt und beispielsweise durch externe Trigger angestoßen.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Gelegentlich</td>
+          <td>Der Prozess wird zwar wiederholt durchgeführt, jedoch ohne ein fest definiertes Intervall.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regelmäßig</td>
+          <td>Der Prozess wird in einem fest definierten Intervall durchgeführt.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regelmäßig überprüft</td>
+          <td>Die Einhaltung der fest definierten Intervalle wird mit Hilfe von Kennzahlen gesteuert.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Kontinuierlich verbessert</td>
+          <td>Der Prozess wird durch die durchführenden Mitarbeitenden kontinuierlich verbessert.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Zur Identifikation der Reifegrade werden spezifische Fragestellungen definiert. Die Antwortmöglichkeiten spiegeln den Umsetzungsgrad des jeweiligen Prüfkriteriums wider.
+    Basierend auf der Konsolidierung der Antworten wird der Reifegrad des betrachteten Prozessbereichs identifiziert. Das methodische Basismodell zur Identifikation der Reifegrade ist die Normreihe ISO/IEC 330xx.
+  </div>
+</div>
+        """
+    st.markdown(keywords_html, unsafe_allow_html=True)
+
+    # Anchor: Antwortmöglichkeiten
+    st.markdown('<div id="rgm_answers"></div>', unsafe_allow_html=True)
+    answers_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Answer Options</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 170px;">Answer</th>
+          <th style="width: 140px;">Degree of implementation</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Not applicable</td>
+          <td>-</td>
+          <td>The assessment criterion does not apply to the organization. If all questions in a level are not applicable, the maturity level remains at the level below or at “NA”.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Not at all</td>
+          <td>0% – 15%</td>
+          <td>There is no evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In a few cases</td>
+          <td>&gt;15% – 50%</td>
+          <td>There is partial evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In most cases</td>
+          <td>&gt;50% – 85%</td>
+          <td>There is significant evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Fully</td>
+          <td>&gt;85% – 100%</td>
+          <td>There is complete evidence that the assessment criterion has been met.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-warning">
+    <div class="rgm-warning-title">IMPORTANT! Please note:</div>
+    <ul>
+      <li>
+        The questions in the maturity model are formulated so that each maturity level builds on the previous levels.
+        If your organization has already reached a higher level and the described state of a lower level has therefore
+        been superseded, the question should still be answered with “Fully”. “Fully” means that the state described for
+        this level has been fully achieved or exceeded. Answers such as “Not at all”, “In a few cases”, or “In most cases”
+        would incorrectly indicate that this level has not yet been fulfilled.
+      </li>
+    </ul>
+  </div>
+</div>
+        """ if en else """
+<div class="rgm-card">
+  <div class="rgm-card-title">Beschreibung der Antwortmöglichkeiten</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 170px;">Antwort</th>
+          <th style="width: 140px;">Umsetzungsgrad</th>
+          <th>Beschreibung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Nicht anwendbar</td>
+          <td>-</td>
+          <td>Das Prüfkriterium ist nicht auf die Organisation anwendbar. Sollten alle Fragen einer Stufe nicht anwendbar sein, verbleibt der Reifegrad auf der darunterliegenden Stufe (bzw. als „NV“).</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Gar nicht</td>
+          <td>0% – 15%</td>
+          <td>Es gibt keinen Nachweis für die Erreichung des Prüfkriteriums.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In ein paar Fällen</td>
+          <td>&gt;15% – 50%</td>
+          <td>Es bestehen teilweise Anzeichen für die Erreichung des Prüfkriteriums.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In den meisten Fällen</td>
+          <td>&gt;50% – 85%</td>
+          <td>Es gibt signifikante Anzeichen für die Erreichung des Prüfkriteriums.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Vollständig</td>
+          <td>&gt;85% – 100%</td>
+          <td>Es gibt einen vollständigen Nachweis für die Erreichung des Prüfkriteriums.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-warning">
+    <div class="rgm-warning-title">WICHTIG! Bitte beachten Sie:</div>
+    <ul>
+      <li>
+        Die Fragen des Reifegradmodells sind so formuliert, dass jede Reifegradstufe auf den vorhergehenden Stufen aufbaut.
+        Wenn Ihre Organisation eine höhere Stufe bereits erreicht hat und der beschriebene Zustand einer niedrigeren Stufe dadurch
+        überwunden wurde (z. B. Varianten werden nicht mehr manuell gepflegt), ist die Frage dennoch mit „Vollständig“ zu beantworten.
+        „Vollständig“ bedeutet: Der beschriebene Zustand dieser Stufe wurde vollständig erreicht oder übertroffen.
+        Antworten wie „Gar nicht“, „In ein paar Fällen“ oder „In den meisten Fällen“ würden fälschlicherweise anzeigen, dass diese Stufe noch nicht erfüllt ist.
+      </li>
+    </ul>
+  </div>
+</div>
+        """
+    st.markdown(answers_html, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # Navigation scoped
+    st.markdown('<div class="rgm-nav">', unsafe_allow_html=True)
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        if st.button(t("common.back"), use_container_width=True):
+            st.session_state["nav_request"] = "Einführung"
+            st.rerun()
+    with c2:
+        if st.button("Continue to assessment" if en else "Weiter zur Erhebung", type="primary", use_container_width=True):
+            st.session_state["nav_request"] = "Erhebung"
+            st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    main()
